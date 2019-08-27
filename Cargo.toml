@@ -19,3 +19,7 @@ rand = "0.7.0"
 
 [build-dependencies]
 cbindgen = "0.9.0"
+
+[dependencies.clear_on_drop]
+features=["nightly"]
+
