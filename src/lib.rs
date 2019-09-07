@@ -27,6 +27,7 @@ use std::os::raw::c_ulong;
 // otherwise it would've been possible to avoid duplication of macro variant list
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+
 pub enum Sr25519SignatureResult {
     Ok,
     EquationFalse,
@@ -284,7 +285,7 @@ pub unsafe extern "C" fn sr25519_vrf_sign_if_less(
     message_ptr: *const u8,
     message_length: c_ulong,
     limit_ptr: *const u8,
-) -> VrfSignResult {
+) -> bool {
     let keypair_bytes = slice::from_raw_parts(keypair_ptr, SR25519_KEYPAIR_SIZE as usize);
     let keypair = create_from_pair(keypair_bytes);
     let message = slice::from_raw_parts(message_ptr, message_length as usize);
@@ -296,9 +297,9 @@ pub unsafe extern "C" fn sr25519_vrf_sign_if_less(
     if let Some((io, proof, _)) = res {
         ptr::copy(io.as_output_bytes().as_ptr(), out_and_proof_ptr, SR25519_VRF_OUTPUT_SIZE as usize);
         ptr::copy(proof.to_bytes().as_ptr(), out_and_proof_ptr.add(SR25519_VRF_OUTPUT_SIZE as usize), SR25519_VRF_PROOF_SIZE as usize);
-        return VrfSignResult { is_less: true, result: Sr25519SignatureResult::Ok };
+        return true;
     } else {
-        return VrfSignResult { is_less: false, result: Sr25519SignatureResult::Ok };
+        return false;
     }
 }
 
