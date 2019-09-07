@@ -316,35 +316,35 @@ pub unsafe extern "C" fn sr25519_vrf_verify(
     message_length: c_ulong,
     output_ptr: *const u8,
     proof_ptr: *const u8,
-) -> Sr25519SignatureResult {
+) -> bool {
     let public_key = create_public(slice::from_raw_parts(public_key_ptr, SR25519_PUBLIC_SIZE as usize));
     let message = slice::from_raw_parts(message_ptr, message_length as usize);
     let ctx = signing_context(SIGNING_CTX).bytes(message);
     let vrf_out = match VRFOutput::from_bytes(
         slice::from_raw_parts(output_ptr, SR25519_VRF_OUTPUT_SIZE as usize)) {
         Ok(val) => val,
-        Err(err) => return convert_error(&err)
+        Err(err) => return false
     };
     let vrf_proof = match VRFProof::from_bytes(
         slice::from_raw_parts(proof_ptr, SR25519_VRF_PROOF_SIZE as usize)) {
         Ok(val) => val,
-        Err(err) => return convert_error(&err)
+        Err(err) => return false
     };
     let (in_out, proof) =
         match public_key.vrf_verify(ctx.clone(), &vrf_out, &vrf_proof) {
             Ok(val) => val,
-            Err(err) => return convert_error(&err)
+            Err(err) => return false
         };
     let decomp_proof = match
         proof.shorten_vrf(&public_key, ctx.clone(), &in_out.to_output()) {
         Ok(val) => val,
-        Err(e) => return convert_error(&e)
+        Err(e) => return false
     };
     if in_out.to_output() == vrf_out &&
         decomp_proof == vrf_proof {
-        Sr25519SignatureResult::Ok
+        true
     } else {
-        convert_error(&SignatureError::EquationFalse)
+        false
     }
 }
 
